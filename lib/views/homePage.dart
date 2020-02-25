@@ -9,7 +9,8 @@ import 'package:found_it_admin_panel/repository/apiRepo.dart';
 import 'package:found_it_admin_panel/views/shareAbleWidget.dart/commonShareWidget.dart';
 import 'package:provider/provider.dart';
 
-import 'blockDetailPage.dart';
+import 'chatBoard.dart';
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -57,23 +58,7 @@ class _HomePageState extends State<HomePage> {
                      // height: 140.0,
                       padding: EdgeInsets.all(8.0),
                       child: InkWell(
-                        //                       child: Table(
-
-                        //   children: [
-                        //     // TableRow(children: [
-                        //     // textWidget("Request",1),
-                        //     // textWidget(data.text,3),
-                        //     //   ]),
-                        //     TableRow(children: [
-                        //       textWidget("Reported By:",1),
-                        //        getUserName(data.claimId)
-                        //     ]),
-                        //     // TableRow(children: [
-                        //     //   textWidget("Report Of:",1),
-                        //     //    getUserName(data.blockId)
-                        //     // ])
-                        //   ],
-                        // ),
+                
                         child: Wrap(
                           children: <Widget>[
                             Row(
@@ -85,6 +70,9 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                                FlatButton(
                                   onPressed: (){
+                                      CommonShareWidget.goToAnotherPage(
+                              nextPage: ChatBoard(data.claimId,data.blockId),
+                              context: context);
 
                                   },
                                    child: Text("view chat",style: TextStyle(color: AppColor.redColor)))
@@ -98,11 +86,21 @@ class _HomePageState extends State<HomePage> {
                                 Expanded(
                                   child: getUserName(data.claimId),
                                 ),
-                                FlatButton(
-                                  onPressed: (){
+                               StreamBuilder<DocumentSnapshot>(
+                                   stream: apiRepo.thisUserAlreadyBlockedOrNot(data.claimId) ,
+                builder: (BuildContext context,  snapshot){
+                    if(!snapshot.hasData)return Text("...");
+                                     if(snapshot.data.exists){
+                                       return Text("Blocked",style: TextStyle(color: AppColor.redColor),);
 
-                                  },
-                                   child: Text("block",style: TextStyle(color: AppColor.redColor)))
+                                     }else{
+                                       return FlatButton(onPressed:  (){
+                                         buildUpdateDialog(context: context,uid: data.claimId );
+                                    
+                                  }, child: Text("block",style: TextStyle(color: AppColor.redColor),));
+                                     }
+                                   },
+                                 )
                               ],
                             ),
                              SizedBox(height: 8.0),
@@ -113,20 +111,32 @@ class _HomePageState extends State<HomePage> {
                                 Expanded(
                                   child: getUserName(data.blockId),
                                 ),
-                                  FlatButton(
-                                  onPressed: (){
+                                 
+                                 
+                                 StreamBuilder<DocumentSnapshot>(
+                                   stream: apiRepo.thisUserAlreadyBlockedOrNot(data.blockId) ,
+                builder: (BuildContext context,  snapshot){
+                  if(!snapshot.hasData)return Text("...");
+                                     if(snapshot.data.exists){
+                                       return Text("Blocked",style: TextStyle(color: AppColor.redColor),);
+
+                                     }else{
+                                       return FlatButton(onPressed:  (){
+                                         buildUpdateDialog(context: context,uid: data.blockId );
                                     
-                                  },
-                                   child: Text("block",style: TextStyle(color: AppColor.redColor),))
+                                  }, child: Text("block",style: TextStyle(color: AppColor.redColor),));
+                                     }
+                                   },
+                                 ),
+                                 
+                                  
                               ],
                             ),
                            
                           ],
                         ),
                         onTap: () {
-                          CommonShareWidget.goToAnotherPage(
-                              nextPage: BlockDetailPage(data.docId),
-                              context: context);
+                  
                         },
                       ),
                     ),
@@ -136,6 +146,45 @@ class _HomePageState extends State<HomePage> {
           return CommonShareWidget.showLoader();
         },
       ),
+    );
+  }
+
+
+
+      Future buildUpdateDialog({BuildContext context,uid}) {
+    FocusScope.of(context).requestFocus(new FocusNode());
+    bool loaderstatus = false;
+    return showDialog(
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setDialougeState) {
+          return AlertDialog(
+            title: Text(loaderstatus ? "Please wait..." : "Sure about blocking this User?"),
+           
+            actions: <Widget>[
+              FlatButton(
+                  child: Text('Yes'),
+                  onPressed: loaderstatus
+                      ? null
+                      : () async{
+                        setState(() {
+                          loaderstatus=true;
+                        });
+                       await apiRepo.addUserAsBlock(uid);
+                       Navigator.of(context).pop();
+                          
+                        }),
+              FlatButton(
+                  child: Text('Cancel'),
+                  onPressed: loaderstatus
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                        })
+            ],
+          );
+        });
+      },
+      context: context,
     );
   }
 

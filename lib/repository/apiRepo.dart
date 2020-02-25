@@ -42,4 +42,13 @@ class ApiRepo extends BaseRepo {
   Stream<DocumentSnapshot>getBlockDetailDocument(docid){
   return _db.collection('pendingBlockList').document(docid).snapshots();
   }
+
+  Stream<DocumentSnapshot>thisUserAlreadyBlockedOrNot(uid){
+    return _db.collection('blockList').document(uid).snapshots();
+  }
+ Future addUserAsBlock(uid){
+    return _db.collection('blockList').document(uid).setData({
+      'block_id':uid
+    });
+  }
 }

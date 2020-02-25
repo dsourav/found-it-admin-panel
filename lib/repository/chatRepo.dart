@@ -26,6 +26,20 @@ class ChatRepo {
         .documents;
   }
 
-
+    String chatMessageEndPoint(String userId, String clientId) {
+    if (userId.compareTo(clientId) == 1) {
+      return userId + clientId;
+    }
+    if (userId.compareTo(clientId) == 0) {
+      return '';
+    }
+    if (userId.compareTo(clientId) == -1) {
+      return clientId + userId;
+    }
+    // else{
+    //   return clientId+userId;
+    // }
+    return "";
+  }
 
 }
